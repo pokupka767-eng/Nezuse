@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Игровой портал</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@300;500;700;900&family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--neon:#7c3aed;--neon2:#06b6d4;--neon3:#ec4899;--glass:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--ok:#22c55e;--no:#ef4444}
+body{font-family:'Inter',sans-serif;background:#05040a;color:#fff;min-height:100vh;overflow-x:hidden}
+button,a,div,input,textarea,select{-webkit-touch-callout:none}
+button:focus,input:focus,textarea:focus,select:focus{outline:none}
+.bg-orbs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;animation:float 18s ease-in-out infinite}
+.orb1{width:520px;height:520px;background:var(--neon);top:-160px;left:-120px}
+.orb2{width:480px;height:480px;background:var(--neon2);bottom:-180px;right:-120px;animation-delay:-6s}
+.orb3{width:400px;height:400px;background:var(--neon3);top:40%;left:55%;animation-delay:-12s;opacity:.35}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,-40px) scale(1.1)}66%{transform:translate(-40px,50px) scale(.95)}}
+.grid-overlay{position:fixed;inset:0;z-index:1;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:60px 60px;-webkit-mask-image:radial-gradient(circle,#000 30%,transparent 75%);mask-image:radial-gradient(circle,#000 30%,transparent 75%);pointer-events:none}
+.screen{position:relative;z-index:2;display:none;min-height:100vh}
+.screen.active{display:block}
+.center-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;animation:appear .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes appear{from{opacity:0;transform:translateY(30px) scale(.97)}to{opacity:1;transform:none}}
+.glass,.card,.mini-stat,.doc,.user-row,.faction-card,.chat-container{background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--border)}
+.card{width:100%;max-width:460px;border-radius:28px;padding:44px 38px;box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative;overflow:hidden}
+.card::before,.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--neon2),var(--neon3),transparent)}
+.logo{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:8px}
+.logo-mark{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--neon),var(--neon2));display:grid;place-items:center;font-family:'Unbounded';font-weight:900;font-size:22px;box-shadow:0 8px 24px rgba(124,58,237,.5)}
+.logo-text{font-family:'Unbounded';font-weight:700;font-size:22px;letter-spacing:2px}
+.subtitle{text-align:center;color:rgba(255,255,255,.5);font-size:14px;margin-bottom:30px}
+h2{font-family:'Unbounded';font-weight:500;font-size:15px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:24px}
+.field{margin-bottom:18px}
+.field label,.issue-field label{display:block;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:8px;font-weight:600}
+.field input,.issue-field input,.issue-field textarea,.issue-field select,.password-input-row input,.password-input-row select{width:100%;padding:14px 16px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:15px;font-family:'Inter';transition:all .3s;-webkit-appearance:none;appearance:none}
+.issue-field select,.password-input-row select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2367e8f9' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
+select option{background:#0f0c19;color:#fff}
+input[type=date]{color-scheme:dark}
+.field input::placeholder,.issue-field input::placeholder,.issue-field textarea::placeholder{color:rgba(255,255,255,.25)}
+.field input:focus,.issue-field input:focus,.issue-field textarea:focus,.issue-field select:focus,.password-input-row input:focus,.password-input-row select:focus,.chat-input:focus{border-color:var(--neon2);background:rgba(6,182,212,.07);box-shadow:0 0 0 3px rgba(6,182,212,.12)}
+.issue-field textarea{resize:vertical;min-height:64px}
+.error{color:#fb7185;font-size:12px;margin-top:6px;display:none}
+.field.invalid input{border-color:#fb7185}
+.field.invalid .error{display:block}
+.btn{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--neon),var(--neon2));color:#fff;font-family:'Unbounded';font-weight:500;font-size:15px;letter-spacing:1px;cursor:pointer;margin-top:10px;transition:all .3s;-webkit-appearance:none;appearance:none}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(124,58,237,.5)}
+.btn-ghost{background:rgba(255,255,255,.06);border:1px solid var(--border)}
+.btn-ghost:hover{background:rgba(255,255,255,.1);box-shadow:none}
+.btn-danger{background:linear-gradient(135deg,#dc2626,#ef4444)}
+.btn-sm{padding:12px 20px;font-size:13px;width:auto;margin-top:0}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.link-row{margin-top:20px;text-align:center;font-size:13px;color:rgba(255,255,255,.45)}
+.link-row a{color:var(--neon2);font-weight:600;cursor:pointer}
+/* burger */
+.burger-wrap{position:fixed;top:22px;right:32px;z-index:60}
+.burger{width:52px;height:52px;border-radius:16px;background:rgba(20,16,32,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:all .3s;box-shadow:0 12px 40px rgba(0,0,0,.45);user-select:none}
+.burger span{display:block;width:22px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--neon2),var(--neon3));transition:all .3s}
+.burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.burger.open span:nth-child(2){opacity:0}
+.burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.dropdown{position:absolute;top:64px;right:0;width:280px;background:rgba(15,12,25,.97);border:1px solid var(--border);border-radius:18px;padding:10px;box-shadow:0 30px 80px rgba(0,0,0,.6);opacity:0;visibility:hidden;transform:translateY(-10px);transition:all .3s;max-height:80vh;overflow-y:auto}
+.dropdown.open{opacity:1;visibility:visible;transform:none}
+.dd-user{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:8px}
+.dd-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--neon),var(--neon2));display:grid;place-items:center;font-weight:700;flex-shrink:0;overflow:hidden}
+.dd-avatar img,.avatar img,.user-avatar img,.chat-avatar img{width:100%;height:100%;object-fit:cover}
+.dd-name{font-weight:700;font-size:15px}
+.dd-role{font-size:12px;color:var(--neon2);margin-top:2px;font-weight:600}
+.dd-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;font-size:14px;color:rgba(255,255,255,.8);cursor:pointer;transition:background .2s;border:none;background:none;width:100%;text-align:left;font-family:'Inter'}
+.dd-item:hover{background:rgba(6,182,212,.12);color:#fff}
+.dd-item.danger{color:#fb7185}
+.dd-item.danger:hover{background:rgba(239,68,68,.15)}
+.dd-badge{margin-left:auto;font-size:10px;font-weight:800;padding:3px 8px;border-radius:100px;background:rgba(236,72,153,.18);border:1px solid rgba(236,72,153,.4);color:#f9a8d4}
+.dd-badge.cyan{background:rgba(6,182,212,.18);border-color:rgba(6,182,212,.4);color:#67e8f9}
+/* profile */
+.profile-hero{position:relative;z-index:3;margin:0 32px;border-radius:24px;overflow:hidden;border:1px solid var(--border);background:rgba(255,255,255,.03)}
+.banner{height:180px;background:linear-gradient(135deg,rgba(124,58,237,.4),rgba(6,182,212,.3));background-size:cover;background-position:center;position:relative}
+.banner-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(5,4,10,.7))}
+.profile-body{padding:0 28px 24px;display:flex;align-items:flex-end;gap:20px;margin-top:-52px;position:relative;flex-wrap:wrap}
+.avatar{width:104px;height:104px;border-radius:24px;background:linear-gradient(135deg,var(--neon),var(--neon2));display:grid;place-items:center;font-family:'Unbounded';font-weight:900;font-size:40px;flex-shrink:0;border:4px solid #0b0914;box-shadow:0 12px 32px rgba(0,0,0,.5);overflow:hidden}
+.profile-info{padding-bottom:6px;flex:1;min-width:200px}
+.profile-name{font-family:'Unbounded';font-size:26px;font-weight:900;background:linear-gradient(90deg,#fff,var(--neon2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.profile-role{display:inline-block;margin:6px 6px 0 0;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:100px;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:#67e8f9}
+.profile-role.owner{background:rgba(236,72,153,.15);border-color:rgba(236,72,153,.35);color:#f9a8d4}
+.profile-role.faction{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.35);color:#c4b5fd}
+.profile-meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:rgba(255,255,255,.5)}
+.profile-meta b{color:#fff;font-weight:600}
+.back-link{display:inline-flex;align-items:center;gap:6px;margin:16px 32px 0;font-size:13px;font-weight:600;color:var(--neon2);cursor:pointer;padding:8px 14px;border-radius:10px;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2)}
+.topbar{position:relative;z-index:4;display:flex;gap:16px;flex-wrap:wrap;padding:22px 32px}
+.top-stats{display:flex;gap:16px;flex-wrap:wrap}
+.mini-stat{display:flex;align-items:center;gap:14px;border-radius:18px;padding:14px 22px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.mini-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px}
+.mini-icon.online{background:rgba(6,182,212,.15)}
+.mini-icon.new{background:rgba(236,72,153,.15)}
+.mini-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.45);font-weight:600;margin-bottom:4px}
+.mini-value{font-family:'Unbounded';font-size:24px;font-weight:900;line-height:1}
+.mini-value.cyan{color:#67e8f9}.mini-value.pink{color:#f9a8d4}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22d3ee;margin-right:8px;animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,211,238,.6)}70%{box-shadow:0 0 0 12px rgba(34,211,238,0)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
+/* docs */
+.docs-area{position:relative;z-index:3;padding:34px 32px 80px;display:flex;flex-direction:column;align-items:center}
+.docs-header{text-align:center;margin-bottom:30px}
+.docs-header h1,.users-header h1{font-family:'Unbounded';font-size:28px;font-weight:900;background:linear-gradient(90deg,#fff,var(--neon2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.docs-header p,.users-header p{color:rgba(255,255,255,.5);font-size:14px}
+.docs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;width:100%;max-width:1000px}
+@media(max-width:900px){.docs-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.docs-grid{grid-template-columns:1fr}}
+.doc{--acc:#06b6d4;border-radius:22px;padding:26px 24px;position:relative;overflow:hidden;transition:transform .3s,border-color .3s,box-shadow .3s;cursor:pointer;user-select:none;border-top:3px solid var(--acc)}
+.doc:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.doc::after{content:'';position:absolute;top:-50px;right:-50px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,var(--acc),transparent 70%);opacity:.22;pointer-events:none}
+.doc-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:24px;margin-bottom:18px;background:rgba(255,255,255,.07);box-shadow:0 0 22px var(--acc)}
+.doc-title{font-family:'Unbounded';font-size:16px;font-weight:700;margin-bottom:16px}
+.doc-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.doc-badge .dot{width:7px;height:7px;border-radius:50%}
+.badge-no{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.badge-no .dot{background:var(--no);box-shadow:0 0 8px var(--no)}
+.badge-ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#86efac}
+.badge-ok .dot{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.doc-sub{margin-top:14px;font-size:12px;color:rgba(255,255,255,.35)}
+.doc-geo{margin-top:8px;font-size:13px;color:rgba(255,255,255,.75);font-weight:600}
+.licenses-list{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px}
+.lic-chip{font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+.lic-chip.has{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:#86efac}
+.t-passport{--acc:#ef4444}.t-medcard{--acc:#22c55e}.t-voenik{--acc:#eab308}.t-licenses{--acc:#06b6d4}.t-povestka{--acc:#f97316}.t-otsrochka{--acc:#a78bfa}
+/* lists */
+.users-area{position:relative;z-index:3;padding:34px 32px 80px;max-width:900px;margin:0 auto}
+.users-header{margin-bottom:24px}
+.users-header h1{font-size:26px;background:linear-gradient(90deg,#fff,var(--neon3));-webkit-background-clip:text;background-clip:text}
+.search-box{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:20px}
+.search-box input{flex:1;background:none;border:none;color:#fff;font-size:15px;font-family:'Inter';outline:none}
+.user-list{display:flex;flex-direction:column;gap:12px}
+.user-row{display:flex;align-items:center;gap:16px;border-radius:18px;padding:16px 20px;transition:all .25s;cursor:pointer}
+.user-row:hover{transform:translateY(-2px);border-color:rgba(6,182,212,.4)}
+.user-avatar{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--neon),var(--neon2));display:grid;place-items:center;font-weight:800;font-size:20px;flex-shrink:0;overflow:hidden;font-family:'Unbounded'}
+.user-info{flex:1;min-width:0}
+.user-name{font-weight:700;font-size:15px}
+.user-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.user-role-tag{font-size:10px;font-weight:800;text-transform:uppercase;padding:3px 9px;border-radius:100px;margin-left:8px;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:#67e8f9}
+.user-role-tag.owner{background:rgba(236,72,153,.15);border-color:rgba(236,72,153,.35);color:#f9a8d4}
+.user-docs-count{font-size:11px;font-weight:700;padding:6px 12px;border-radius:100px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#86efac;white-space:nowrap}
+/* factions */
+.faction-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;justify-content:center}
+.faction-tab{padding:10px 18px;border-radius:12px;font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);cursor:pointer;font-family:'Inter'}
+.faction-tab.active{background:linear-gradient(135deg,rgba(124,58,237,.3),rgba(6,182,212,.25));border-color:rgba(6,182,212,.4);color:#fff}
+.faction-tab.opolchenie{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.35);color:#fca5a5}
+.faction-tab.opolchenie.active{background:linear-gradient(135deg,rgba(220,38,38,.4),rgba(239,68,68,.3));color:#fff}
+.faction-card{border-radius:22px;padding:24px 26px;margin-bottom:18px}
+.faction-card-head{display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.faction-icon{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:26px;background:rgba(124,58,237,.15)}
+.faction-name{font-family:'Unbounded';font-size:18px;font-weight:700}
+.faction-type{font-size:12px;color:rgba(255,255,255,.45);margin-top:3px}
+.faction-type.owner{color:#f9a8d4}
+.faction-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:560px){.faction-stats-row{grid-template-columns:1fr}}
+.faction-stat{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 14px}
+.faction-stat-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);font-weight:700;margin-bottom:4px}
+.faction-stat-value{font-size:16px;font-weight:700}
+.password-input-row{display:flex;gap:10px;align-items:stretch;margin-top:14px}
+.password-input-row input,.password-input-row select{flex:1;padding:12px 16px;font-size:14px;border-radius:12px}
+.members-list{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.member-row{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 14px;flex-wrap:wrap}
+.member-name{font-weight:700;font-size:14px;flex:1;min-width:100px}
+.member-rank{font-size:11px;font-weight:800;padding:4px 10px;border-radius:100px;background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);color:#67e8f9}
+.member-rank.owner{background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3);color:#f9a8d4}
+.member-actions{display:flex;gap:6px}
+/* chats */
+.chat-container{display:flex;flex-direction:column;border-radius:22px;height:calc(100vh - 200px);min-height:400px;overflow:hidden}
+.chat-header{padding:16px 22px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.chat-title{font-family:'Unbounded';font-size:16px;font-weight:700}
+.chat-online-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#86efac;display:inline-flex;align-items:center}
+.chat-messages{flex:1;overflow-y:auto;padding:16px 22px;display:flex;flex-direction:column;gap:12px}
+.chat-msg{display:flex;gap:10px;align-items:flex-start;animation:appear .3s}
+.chat-msg.my{flex-direction:row-reverse}
+.chat-avatar{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,var(--neon),var(--neon2));display:grid;place-items:center;font-weight:800;font-size:14px;overflow:hidden;font-family:'Unbounded'}
+.chat-bubble-wrap{display:flex;flex-direction:column;max-width:75%}
+.chat-msg.my .chat-bubble-wrap{align-items:flex-end}
+.chat-author{font-size:11px;font-weight:700;margin-bottom:4px;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chat-rank-tag{font-size:9px;font-weight:800;text-transform:uppercase;padding:2px 7px;border-radius:100px;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:#67e8f9}
+.chat-rank-tag.owner{background:rgba(236,72,153,.15);border-color:rgba(236,72,153,.35);color:#f9a8d4}
+.chat-bubble{padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:14px;line-height:1.4;word-break:break-word}
+.chat-msg.my .chat-bubble{background:linear-gradient(135deg,rgba(124,58,237,.35),rgba(6,182,212,.3));border-color:rgba(6,182,212,.4)}
+.chat-time{font-size:10px;color:rgba(255,255,255,.3);margin-top:4px}
+.chat-input-wrap{display:flex;gap:10px;padding:16px 22px;border-top:1px solid rgba(255,255,255,.08)}
+.chat-input{flex:1;padding:14px 18px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:14px;color:#fff;font-size:14px;font-family:'Inter';transition:all .25s}
+.chat-send{padding:0 22px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--neon),var(--neon2));color:#fff;font-weight:700;cursor:pointer;font-size:14px}
+.chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-size:14px;gap:8px}
+.chat-empty-icon{font-size:44px;opacity:.4}
+/* modal */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(3,2,8,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{width:100%;max-width:600px;background:rgba(15,12,25,.98);border:1px solid var(--border);border-radius:26px;padding:34px 32px;position:relative;box-shadow:0 40px 100px rgba(0,0,0,.7);animation:appear .35s;margin:auto}
+.modal-close{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:rgba(255,255,255,.7);font-size:18px;cursor:pointer}
+.modal h3{font-family:'Unbounded';font-size:20px;font-weight:700;margin-bottom:6px;padding-right:44px}
+.modal-sub{color:rgba(255,255,255,.45);font-size:13px;margin-bottom:24px}
+/* doc view */
+.doc-view{--acc:#06b6d4;position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(0,0,0,.35));border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:26px 24px 24px;margin-bottom:20px}
+.doc-view::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(90deg,var(--acc),transparent)}
+.doc-view::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.07),transparent);animation:shine 5s infinite;pointer-events:none}
+@keyframes shine{0%{left:-60%}60%,100%{left:130%}}
+.doc-view-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px dashed rgba(255,255,255,.12)}
+.doc-view-icon{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:26px;background:rgba(255,255,255,.08);box-shadow:0 0 24px var(--acc)}
+.doc-view-title{font-family:'Unbounded';font-size:17px;font-weight:700}
+.doc-view-status{font-size:12px;margin-top:3px;font-weight:600}
+.doc-view-status.ok{color:#86efac}.doc-view-status.no{color:#fca5a5}
+.doc-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:480px){.doc-fields{grid-template-columns:1fr}}
+.doc-field{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 14px}
+.doc-field.wide{grid-column:1/-1}
+.doc-field-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);font-weight:700;margin-bottom:5px}
+.doc-field-value{font-size:14px;font-weight:600;word-break:break-word}
+.doc-field-value.empty{color:rgba(255,255,255,.25);font-weight:400;font-style:italic}
+.mrz{margin-top:16px;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.4);font-family:monospace;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.4);word-break:break-all}
+.signature-block{margin-top:18px;padding-top:18px;border-top:1px dashed rgba(255,255,255,.12);display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.signature-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);font-weight:700;margin-bottom:4px}
+.signature-text{font-family:'Caveat',cursive;font-size:30px;font-weight:700;color:#67e8f9;line-height:1}
+.signature-text.empty{font-family:'Inter';font-size:13px;font-weight:400;font-style:italic;color:rgba(255,255,255,.25)}
+.stamp{width:84px;height:84px;border-radius:50%;border:2px dashed var(--acc);display:grid;place-items:center;text-align:center;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--acc);transform:rotate(-12deg);flex-shrink:0;padding:6px;line-height:1.3}
+/* forms */
+.issue-form{display:flex;flex-direction:column;gap:14px}
+.issue-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.issue-row{grid-template-columns:1fr}}
+.issue-field label{font-size:11px;letter-spacing:.8px;margin-bottom:7px;font-weight:700}
+.issue-field input,.issue-field textarea,.issue-field select{padding:12px 14px;font-size:14px;border-radius:12px}
+.lic-toggle-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.lic-toggle{padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);cursor:pointer;font-family:'Inter'}
+.lic-toggle.active{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.45);color:#86efac}
+.settings-tabs{display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap}
+.settings-tab{flex:1;min-width:80px;padding:11px 8px;border-radius:12px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);cursor:pointer;font-family:'Inter'}
+.settings-tab.active{background:linear-gradient(135deg,rgba(124,58,237,.3),rgba(6,182,212,.25));border-color:rgba(6,182,212,.4);color:#fff}
+.tab-pane{display:none}.tab-pane.active{display:block;animation:fadeIn .25s}
+.upload-box{position:relative;border:2px dashed rgba(255,255,255,.15);border-radius:18px;padding:22px;text-align:center;cursor:pointer;background:rgba(0,0,0,.2);overflow:hidden}
+.upload-box input[type=file]{display:none}
+.up-icon{font-size:32px;margin-bottom:10px}.up-title{font-weight:700;font-size:14px;margin-bottom:4px}.up-hint{font-size:12px;color:rgba(255,255,255,.4)}
+.upload-preview{position:absolute;inset:0;background-size:cover;background-position:center;border-radius:16px;display:none}
+.upload-preview.show{display:block}
+.upload-banner{height:140px;display:grid;place-items:center;padding:0}
+.upload-avatar{height:180px;display:grid;place-items:center}
+.settings-section{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:18px;margin-bottom:16px}
+.settings-section-title{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:14px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-row-info{flex:1}.toggle-row-label{font-size:14px;font-weight:600}.toggle-row-desc{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px}
+.switch{position:relative;width:48px;height:28px;border-radius:100px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);cursor:pointer;transition:all .25s;flex-shrink:0}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:all .25s}
+.switch.on{background:linear-gradient(135deg,var(--neon),var(--neon2));border-color:transparent}
+.switch.on::after{left:23px}
+.xp-bar-wrap{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.1);border-radius:100px;height:24px;overflow:hidden;position:relative;margin-top:8px}
+.xp-bar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--neon2),var(--neon));transition:width .6s}
+.xp-bar-text{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.quest{display:flex;align-items:flex-start;gap:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.quest-check{width:22px;height:22px;border-radius:8px;flex-shrink:0;border:2px solid rgba(255,255,255,.2);display:grid;place-items:center;font-size:12px;cursor:pointer;margin-top:1px}
+.quest-check.done{background:rgba(34,197,94,.2);border-color:rgba(34,197,94,.5);color:#86efac}
+.quest-info{flex:1}.quest-title{font-size:13px;font-weight:600;margin-bottom:2px}.quest-xp{font-size:11px;color:#67e8f9;font-weight:700}
+.quest.done .quest-title{text-decoration:line-through;opacity:.5}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,12,25,.97);border:1px solid rgba(6,182,212,.4);border-radius:14px;padding:14px 24px;font-size:14px;font-weight:600;opacity:0;visibility:hidden;transition:all .3s;z-index:300;max-width:90vw;text-align:center}
+.toast.show{opacity:1;visibility:visible;transform:translateX(-50%)}
+.toast.err{border-color:rgba(239,68,68,.5)}.toast.ok{border-color:rgba(34,197,94,.5)}
+@media(max-width:700px){.burger-wrap{top:16px;right:16px}.topbar{padding:16px}.profile-hero{margin:0 16px}.back-link{margin:16px 16px 0}.docs-area,.users-area{padding:26px 16px 80px}.banner{height:140px}.avatar{width:84px;height:84px;font-size:32px;border-radius:20px}.profile-name{font-size:21px}.profile-body{padding:0 18px 20px;margin-top:-42px}.modal{padding:28px 20px}.chat-container{height:calc(100vh - 160px)}.chat-messages{padding:14px}.chat-input-wrap{padding:12px 14px}.chat-bubble-wrap{max-width:85%}}
+#boot{position:fixed;inset:0;z-index:400;background:#05040a;display:grid;place-items:center;transition:opacity .4s}
+#boot.hide{opacity:0;pointer-events:none}
+.boot-ring{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.12);border-top-color:var(--neon2);animation:bootspin 1s linear infinite}
+@keyframes bootspin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="boot"><div class="boot-ring"></div></div>
+<div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+<div class="grid-overlay"></div>
+
+<section class="screen active" id="registerScreen"><div class="center-wrap"><div class="card">
+  <div class="logo"><div class="logo-mark">N</div><div class="logo-text">NEXUS</div></div>
+  <p class="subtitle">Создай аккаунт и войди в игру</p><h2>Регистрация</h2>
+  <form id="registerForm" novalidate>
+    <div class="field" id="fName"><label>Имя</label><input type="text" id="name" placeholder="Твой никнейм" autocomplete="username"><div class="error">Введи имя (2–15 символов)</div></div>
+    <div class="field" id="fAge"><label>Возраст</label><input type="number" id="age" placeholder="Например, 18" min="6" max="99"><div class="error">Введи возраст от 6 до 99</div></div>
+    <div class="field" id="fPass"><label>Пароль</label><input type="password" id="pass" placeholder="Минимум 6 символов" autocomplete="new-password"><div class="error">Пароль должен быть не короче 6 символов</div></div>
+    <button type="submit" class="btn">СОЗДАТЬ АККАУНТ</button>
+  </form>
+  <div class="link-row">Уже есть аккаунт? <a id="toLogin">Войти</a></div>
+</div></div></section>
+
+<section class="screen" id="loginScreen"><div class="center-wrap"><div class="card">
+  <div class="logo"><div class="logo-mark">N</div><div class="logo-text">NEXUS</div></div>
+  <p class="subtitle">Вход в аккаунт</p><h2>Авторизация</h2>
+  <form id="loginForm" novalidate>
+    <div class="field" id="lName"><label>Имя</label><input type="text" id="loginName" placeholder="Твой никнейм" autocomplete="username"><div class="error">Введи имя</div></div>
+    <div class="field" id="lPass"><label>Пароль</label><input type="password" id="loginPass" placeholder="Пароль" autocomplete="current-password"><div class="error">Введи пароль</div></div>
+    <button type="submit" class="btn">ВОЙТИ</button>
+  </form>
+  <div class="link-row">Нет аккаунта? <a id="toRegister">Зарегистрироваться</a></div>
+</div></div></section>
+
+<section class="screen" id="menuScreen">
+  <div class="burger-wrap">
+    <div class="burger" id="burger"><span></span><span></span><span></span></div>
+    <div class="dropdown" id="dropdown">
+      <div class="dd-user"><div class="dd-avatar" id="ddAvatar">?</div><div><div class="dd-name" id="ddName">Игрок</div><div class="dd-role" id="ddRole">Игрок</div></div></div>
+      <button class="dd-item" id="openUsers" style="display:none">👥 Пользователи <span class="dd-badge">Владелец</span></button>
+      <button class="dd-item" id="openFactions">🏛️ Фракции и ОПГ</button>
+      <button class="dd-item" id="openGlobalChat">💬 Общий чат</button>
+      <button class="dd-item" id="openFactionChat">📻 Чат фракции</button>
+      <button class="dd-item" id="openRadio">📡 Рация <span class="dd-badge cyan" id="radioBadge" style="display:none">7+</span></button>
+      <button class="dd-item" id="openSettings">⚙️ Настройки</button>
+      <button class="dd-item danger" id="logoutBtn">🚪 Выйти с аккаунта</button>
+    </div>
+  </div>
+  <div class="topbar"><div class="top-stats">
+    <div class="mini-stat"><div class="mini-icon online">🎮</div><div><div class="mini-label"><span class="pulse"></span>Сейчас онлайн</div><div class="mini-value cyan" id="onlineCount">0</div></div></div>
+    <div class="mini-stat"><div class="mini-icon new">🚀</div><div><div class="mini-label">Новых за день</div><div class="mini-value pink" id="newCount">0</div></div></div>
+  </div></div>
+
+  <div id="profileView">
+    <div class="profile-hero">
+      <div class="banner" id="profileBanner"><div class="banner-overlay"></div></div>
+      <div class="profile-body">
+        <div class="avatar" id="profileAvatar">?</div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">Игрок</div>
+          <div><span class="profile-role" id="profileRole">Игрок</span><span class="profile-role faction" id="profileFaction" style="display:none"></span></div>
+          <div class="profile-meta" id="profileMeta"></div>
+        </div>
+      </div>
+    </div>
+    <div class="docs-area"><div class="docs-header"><h1>Документы</h1><p>Нажми на документ, чтобы посмотреть данные</p></div><div class="docs-grid" id="docsGrid"></div></div>
+  </div>
+
+  <div id="usersView" style="display:none"><div class="back-link" id="backFromUsers">← Назад в профиль</div>
+    <div class="users-area"><div class="users-header"><h1>👥 Пользователи</h1><p>Управление документами игроков</p></div>
+    <div class="search-box"><span>🔍</span><input type="text" id="userSearch" placeholder="Поиск по имени..."></div>
+    <div class="user-list" id="userList"></div></div></div>
+
+  <div id="factionsView" style="display:none"><div class="back-link" id="backFromFactions">← Назад в профиль</div>
+    <div class="users-area"><div class="users-header"><h1>🏛️ Фракции и ОПГ</h1><p>Государственные структуры и организованные группировки</p></div>
+    <div class="faction-tabs" id="factionTabs"></div>
+    <div id="createFactionWrap" style="text-align:center;margin-bottom:18px;display:none"><button class="btn btn-sm" id="createFactionBtn">➕ Создать фракцию</button></div>
+    <div id="factionContent"></div></div></div>
+
+  <div id="globalChatView" style="display:none"><div class="back-link" id="backFromGlobalChat">← Назад в профиль</div>
+    <div class="users-area"><div class="chat-container">
+      <div class="chat-header"><div class="chat-title">💬 Общий чат</div><div class="chat-online-badge"><span class="pulse"></span><span id="globalChatOnline">1</span> онлайн</div></div>
+      <div class="chat-messages" id="globalChatMessages"></div>
+      <div class="chat-input-wrap"><input type="text" class="chat-input" id="globalChatInput" placeholder="Написать сообщение..." maxlength="300"><button class="chat-send" id="globalChatSend">➤</button></div>
+    </div></div></div>
+
+  <div id="factionChatView" style="display:none"><div class="back-link" id="backFromFactionChat">← Назад в профиль</div>
+    <div class="users-area"><div class="chat-container">
+      <div class="chat-header"><div class="chat-title" id="factionChatTitle">📻 Чат фракции</div><div class="chat-online-badge"><span class="pulse"></span><span id="factionChatOnline">0</span> в сети</div></div>
+      <div class="chat-messages" id="factionChatMessages"></div>
+      <div class="chat-input-wrap"><input type="text" class="chat-input" id="factionChatInput" placeholder="Написать во фракцию..." maxlength="300"><button class="chat-send" id="factionChatSend">➤</button></div>
+    </div></div></div>
+
+  <div id="radioView" style="display:none"><div class="back-link" id="backFromRadio">← Назад в профиль</div>
+    <div class="users-area"><div class="chat-container">
+      <div class="chat-header"><div class="chat-title" id="radioTitle">📡 Рация</div><div class="chat-online-badge"><span class="pulse"></span>Только 7+ ранг</div></div>
+      <div class="chat-messages" id="radioMessages"></div>
+      <div class="chat-input-wrap"><input type="text" class="chat-input" id="radioInput" placeholder="Передача по рации..." maxlength="300"><button class="chat-send" id="radioSend">➤</button></div>
+    </div></div></div>
+</section>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
+<div class="modal-overlay" id="issueOverlay"><div class="modal" id="issueContent"></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAnalytics, isSupported as analyticsSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updatePassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, query, orderBy, limit, where, onSnapshot, writeBatch, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+/* ===== FIREBASE ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDyKQ5fORa6-PTfvBupE1-4ZKejaORs6Mo",
+  authDomain: "gameportal-4cff.firebaseapp.com",
+  projectId: "gameportal-4cff",
+  storageBucket: "gameportal-4cff.firebasestorage.app",
+  messagingSenderId: "582150443355",
+  appId: "1:582150443355:web:80590ade767b43aee9ca7e",
+  measurementId: "G-P86F0H276B"
+};
+const app = initializeApp(firebaseConfig);
+analyticsSupported().then(ok=>{if(ok)getAnalytics(app)}).catch(()=>{});
+const auth = getAuth(app);
+const db = getFirestore(app);
+window.__nexusReady = true;
+
+
+/* ===== ДАННЫЕ ===== */
+const DOC_TYPES=[
+ {key:'povestka',title:'Повестка',icon:'📜',sub:'Статус повестки из военкомата'},
+ {key:'medcard',title:'Мед карта',icon:'🏥',sub:'Медицинская карта игрока'},
+ {key:'voenik',title:'Военный билет',icon:'🎖️',sub:'Документ о прохождении службы'},
+ {key:'licenses',title:'Лицензии',icon:'🪪',sub:'Водительские категории',isLicenses:true},
+ {key:'passport',title:'Паспорт',icon:'📕',sub:'Удостоверение личности'},
+ {key:'otsrochka',title:'Отсрочка от службы',icon:'⏳',sub:'Отсрочка от призыва'}
+];
+const LICENSE_CATS=['A','B','C','D','E'];
+
+/* Страны и города — дописывай свои сюда */
+/* Страны и города — дописывай свои сюда */
+const GEO={
+ 'Россия':{flag:'🇷🇺',cities:['Москва','Санкт-Петербург','Новосибирск','Екатеринбург','Казань','Нижний Новгород','Краснодар','Самара','Ростов-на-Дону','Владивосток','Сочи']},
+ 'Украина':{flag:'🇺🇦',cities:['Киев','Харьков','Одесса','Днепр','Львов']},
+ 'Беларусь':{flag:'🇧🇾',cities:['Минск','Гомель','Брест','Гродно','Витебск']},
+ 'Казахстан':{flag:'🇰🇿',cities:['Астана','Алматы','Шымкент','Караганда']},
+ 'США':{flag:'🇺🇸',cities:['Нью-Йорк','Лос-Анджелес','Чикаго','Майами','Лас-Вегас']},
+ 'Великобритания':{flag:'🇬🇧',cities:['Лондон','Манчестер','Ливерпуль']},
+ 'Германия':{flag:'🇩🇪',cities:['Берлин','Мюнхен','Гамбург','Кёльн']},
+ 'Франция':{flag:'🇫🇷',cities:['Париж','Марсель','Лион']},
+ 'Италия':{flag:'🇮🇹',cities:['Рим','Милан','Неаполь']},
+ 'Турция':{flag:'🇹🇷',cities:['Стамбул','Анкара','Анталья']},
+ 'ОАЭ':{flag:'🇦🇪',cities:['Дубай','Абу-Даби']},
+ 'Япония':{flag:'🇯🇵',cities:['Токио','Осака','Киото']},
+ 'Китай':{flag:'🇨🇳',cities:['Пекин','Шанхай','Гонконг']}
+};
+function flagOf(c){return GEO[c]?GEO[c].flag+' ':''}
+function countryOptions(sel){return '<option value="">— выбрать —</option>'+Object.keys(GEO).map(c=>`<option value="${c}" ${c===sel?'selected':''}>${GEO[c].flag} ${c}</option>`).join('')}
+function cityOptions(country,sel){const l=(GEO[country]||{}).cities||[];return '<option value="">— выбрать —</option>'+l.map(c=>`<option ${c===sel?'selected':''}>${c}</option>`).join('')}
+
+const DEFAULT_FACTIONS={
+ gibdd:{key:'gibdd',name:'ГИБДД',icon:'🚔',type:'Государственная',canTakeLicense:true,canIssueDocs:true,
+  ranks:[{level:1,name:'Рядовой полиции',xpToNext:100},{level:2,name:'Младший сержант',xpToNext:250},{level:3,name:'Сержант',xpToNext:400},{level:4,name:'Старший сержант',xpToNext:600},{level:5,name:'Прапорщик',xpToNext:850},{level:6,name:'Лейтенант',xpToNext:1200},{level:7,name:'Полковник',xpToNext:null}],
+  description:'Дорожная полиция. Может забирать водительские права, выдавать документы.',
+  quests:[{id:'q1',title:'Проверить 10 документов',xp:50},{id:'q2',title:'Выдать 5 штрафов',xp:80},{id:'q3',title:'Задержать нарушителя',xp:100}]},
+ gov:{key:'gov',name:'Правительство',icon:'🏛️',type:'Государственная',canTakeLicense:true,canIssueDocs:true,
+  ranks:[{level:1,name:'Секретарь',xpToNext:150},{level:2,name:'Специалист',xpToNext:300},{level:3,name:'Ведущий специалист',xpToNext:500},{level:4,name:'Начальник отдела',xpToNext:750},{level:5,name:'Заместитель главы',xpToNext:1000},{level:6,name:'Глава администрации',xpToNext:null}],
+  description:'Правительство города. Может изымать права, выдавать документы.',
+  quests:[{id:'q1',title:'Принять 3 закона',xp:100},{id:'q2',title:'Выдать 5 документов',xp:80},{id:'q3',title:'Урегулировать конфликт',xp:120}]},
+ omon:{key:'omon',name:'ОМОН',icon:'🛡️',type:'Государственная',canTakeLicense:false,canIssueDocs:false,
+  ranks:[{level:1,name:'Рядовой ОМОН',xpToNext:120},{level:2,name:'Младший сержант',xpToNext:280},{level:3,name:'Сержант',xpToNext:450},{level:4,name:'Старший сержант',xpToNext:650},{level:5,name:'Прапорщик',xpToNext:900},{level:6,name:'Лейтенант',xpToNext:1200},{level:7,name:'Капитан',xpToNext:1500},{level:8,name:'Майор',xpToNext:1800},{level:9,name:'Подполковник',xpToNext:null}],
+  description:'Отряд милиции особого назначения.',
+  quests:[{id:'q1',title:'Провести рейд',xp:100},{id:'q2',title:'Задержать 5 преступников',xp:150},{id:'q3',title:'Охранять объект',xp:80}]},
+ opg:{key:'opg',name:'ОПГ «Тени»',icon:'💀',type:'ОПГ',canTakeLicense:false,canIssueDocs:false,
+  ranks:[{level:1,name:'Шестёрка',xpToNext:100},{level:2,name:'Боец',xpToNext:250},{level:3,name:'Стажёр',xpToNext:400},{level:4,name:'Бригадир',xpToNext:600},{level:5,name:'Авторитет',xpToNext:850},{level:6,name:'Вор в законе',xpToNext:1200},{level:7,name:'Дон',xpToNext:null}],
+  description:'Организованная преступная группировка.',
+  quests:[{id:'q1',title:'Ограбить магазин',xp:100},{id:'q2',title:'Убрать конкурента',xp:150},{id:'q3',title:'Перевезти груз',xp:80}]}
+};
+const EMPTY_DOC={issued:false,data:{},signature:'',issuedBy:'',issuedAt:''};
+
+/* ===== СОСТОЯНИЕ (данные приходят из Firestore) ===== */
+const clone=o=>JSON.parse(JSON.stringify(o));
+let FACTIONS=clone(DEFAULT_FACTIONS);   // фракции: встроенные + созданные владельцем
+let USERS={};          // имя -> данные игрока (+uid)
+let UID2NAME={};       // uid -> имя
+let BANNERS={};        // uid -> баннер (dataURL | null), грузится по требованию
+let PRESENCE={};       // uid -> {show, ts} — кто в сети
+let FACTION_PASS={};   // ключ фракции -> пароль (виден только владельцу)
+let currentUser=null,currentViewUser=null,settingsDraft={},currentView='profile',currentFactionTab='gibdd';
+let sessionUid=null,regBusy=false,greet=null,seeded=false,unsubs=[],timers=[];
+
+/* ===== УТИЛИТЫ ===== */
+const $=id=>document.getElementById(id);
+const screens={register:$('registerScreen'),login:$('loginScreen'),menu:$('menuScreen')};
+function showScreen(n){Object.values(screens).forEach(s=>s.classList.remove('active'));screens[n].classList.add('active');window.scrollTo(0,0)}
+const getUser=n=>USERS[n];
+const emptyDoc=()=>JSON.parse(JSON.stringify(EMPTY_DOC));
+function ensureDocs(u){
+ if(!u.docs)u.docs={};
+ DOC_TYPES.forEach(d=>{if(!u.docs[d.key])u.docs[d.key]=emptyDoc()});
+ if(!u.settings)u.settings={showOnline:true,showAge:true,notifications:true,sounds:false,lang:'ru'};
+ if(u.factionRank===undefined)u.factionRank=0;
+ if(u.factionXp===undefined)u.factionXp=0;
+ if(!u.questProgress)u.questProgress={};
+}
+const initials=n=>(n||'?').trim().charAt(0).toUpperCase();
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+const countIssuedDocs=u=>DOC_TYPES.filter(d=>u.docs&&u.docs[d.key]&&u.docs[d.key].issued).length;
+function getRankInfo(fk,lvl){const f=FACTIONS[fk];if(!f)return null;return f.ranks.find(r=>r.level===lvl)||f.ranks[0]}
+function getCurrentRankName(u){if(!u.faction||!u.factionRank)return null;const r=getRankInfo(u.faction,u.factionRank);return r?r.name:null}
+function getTimeStr(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0')}
+function showVal(f,v){
+ if(!v)return '—';
+ if(f.type==='country')return flagOf(v)+esc(v);
+ if(f.type==='date'&&/^\d{4}-\d{2}-\d{2}$/.test(v))return esc(new Date(v).toLocaleDateString('ru-RU'));
+ return esc(v);
+}
+let toastTimer;
+function showToast(t,type=''){const el=$('toast');el.textContent=t;el.className='toast show '+type;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800)}
+
+
+/* ===== ХЕЛПЕРЫ FIREBASE ===== */
+const IMG_RE=/^data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/;
+const safeImg=s=>(typeof s==='string'&&s.length<800000&&IMG_RE.test(s))?s:null;
+const OWNER_NAME='Форст';                 // первый, кто зарегистрирует это имя, станет Владельцем
+const EMAIL_DOMAIN='nexus-portal.app';    // служебный домен: имя игрока превращается в «почту» для Firebase Auth
+const encBytes=n=>[...new TextEncoder().encode(n.trim().toLowerCase())];
+const nameKey=n=>encBytes(n).map(b=>b.toString(16).padStart(2,'0')).join('');
+const nameEmail=n=>'u'+nameKey(n)+'@'+EMAIL_DOMAIN;
+const validName=n=>n.length>=2&&n.length<=15&&encBytes(n).length<=31;
+const isOwnerName=n=>n.trim().toLowerCase()===OWNER_NAME.toLowerCase();
+const randPass=()=>Array.from(crypto.getRandomValues(new Uint8Array(6)),b=>'abcdefghjkmnpqrstuvwxyz23456789'[b%31]).join('');
+const hideBoot=()=>$('boot').classList.add('hide');
+const DEFAULT_SETTINGS=()=>({showOnline:true,showAge:true,notifications:true,sounds:false,lang:'ru'});
+
+function authError(e){
+ const c=(e&&e.code)||'';
+ if(['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c))return 'Неверное имя или пароль';
+ if(c==='auth/email-already-in-use')return 'Имя уже занято';
+ if(c==='auth/weak-password')return 'Пароль слишком простой';
+ if(c==='auth/too-many-requests')return 'Слишком много попыток, подожди немного';
+ if(c==='auth/network-request-failed')return 'Нет соединения с интернетом';
+ if(c==='auth/operation-not-allowed')return 'В Firebase не включён вход по Email/Password';
+ if(c==='auth/requires-recent-login')return 'Войди заново и повтори';
+ return 'Ошибка: '+(c||(e&&e.message)||'неизвестная');
+}
+let lastErrAt=0;
+function dbErr(e){
+ console.error(e);
+ if(Date.now()-lastErrAt<4000)return;lastErrAt=Date.now();
+ const c=(e&&e.code)||'';
+ showToast(c==='permission-denied'?'Нет доступа: опубликуй правила Firestore':'Ошибка базы данных'+(c?` (${c})`:''),'err');
+}
+async function userUpdate(u,patch){
+ try{await updateDoc(doc(db,'users',u.uid),patch);return true}
+ catch(e){console.error(e);showToast(e.code==='permission-denied'?'Нет прав на это действие':'Ошибка базы данных','err');return false}
+}
+
+/* ===== РЕГИСТРАЦИЯ / ВХОД ===== */
+const setInvalid=(id,v)=>$(id).classList.toggle('invalid',v);
+$('registerForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ if(regBusy)return;
+ const name=$('name').value.trim(),age=parseInt($('age').value,10),pass=$('pass').value;
+ const nb=!validName(name),ab=isNaN(age)||age<6||age>99,pb=pass.length<6;
+ setInvalid('fName',nb);setInvalid('fAge',ab);setInvalid('fPass',pb);
+ if(nb||ab||pb)return;
+ regBusy=true;
+ let cred=null;
+ try{
+  cred=await createUserWithEmailAndPassword(auth,nameEmail(name),pass);
+  const uid=cred.user.uid,key=nameKey(name);
+  const ownerSnap=isOwnerName(name)?await getDoc(doc(db,'meta','owner')):null;
+  const claimOwner=!!ownerSnap&&!ownerSnap.exists();
+  const base={name,nameKey:key,age,bio:'',avatar:null,settings:DEFAULT_SETTINGS(),docs:{},faction:null,factionRank:0,factionXp:0,questProgress:{},createdAt:serverTimestamp()};
+  const write=async role=>{
+   const b=writeBatch(db);
+   b.set(doc(db,'users',uid),{...base,role});
+   b.set(doc(db,'names',key),{uid});
+   if(role==='Владелец')b.set(doc(db,'meta','owner'),{uid});
+   await b.commit();
+  };
+  try{await write(claimOwner?'Владелец':'Игрок')}
+  catch(err){if(claimOwner)await write('Игрок');else throw err}
+  await startSession(cred.user);
+  showToast(`Добро пожаловать, ${name}!`,'ok');
+ }catch(err){
+  console.error(err);
+  if(cred){try{await deleteUser(cred.user)}catch(_){}}
+  if(err&&err.code==='permission-denied')showToast('Имя занято или правила Firestore не опубликованы','err');
+  else showToast(authError(err),'err');
+ }finally{regBusy=false}
+});
+$('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const name=$('loginName').value.trim(),pass=$('loginPass').value;
+ setInvalid('lName',!name);setInvalid('lPass',!pass);
+ if(!name||!pass)return;
+ greet='С возвращением';
+ try{await signInWithEmailAndPassword(auth,nameEmail(name),pass)}
+ catch(err){greet=null;showToast(authError(err),'err')}
+});
+$('toLogin').addEventListener('click',()=>showScreen('login'));
+$('toRegister').addEventListener('click',()=>showScreen('register'));
+
+onAuthStateChanged(auth,async fu=>{
+ if(regBusy)return;
+ try{
+  if(fu){if(sessionUid!==fu.uid)await startSession(fu)}
+  else if(sessionUid){resetLocal();showScreen('login')}
+ }catch(e){console.error(e)}
+ finally{hideBoot()}
+});
+
+/* ===== СЕССИЯ ===== */
+async function startSession(fu){
+ sessionUid=fu.uid;
+ let snap;
+ try{snap=await getDoc(doc(db,'users',fu.uid))}
+ catch(e){sessionUid=null;dbErr(e);try{await signOut(auth)}catch(_){}return}
+ if(!snap.exists()){sessionUid=null;try{await signOut(auth)}catch(_){}showToast('Профиль не найден — зарегистрируйся заново','err');return}
+ const d=snap.data({serverTimestamps:'estimate'});
+ currentUser={uid:fu.uid,name:d.name,role:d.role};
+ const me={...d,uid:fu.uid};ensureDocs(me);
+ USERS={[d.name]:me};UID2NAME={[fu.uid]:d.name};
+ startListeners();
+ enterMenu();
+ beat();pollPresence();
+ timers.push(setInterval(beat,120000),setInterval(pollPresence,90000));
+ if(greet){showToast(`${greet}, ${d.name}!`,'ok');greet=null}
+}
+function startListeners(){
+ stopListeners();
+ unsubs.push(onSnapshot(collection(db,'users'),snap=>{
+  const m={},u2n={};
+  snap.forEach(s=>{const d={...s.data({serverTimestamps:'estimate'}),uid:s.id};ensureDocs(d);m[d.name]=d;u2n[s.id]=d.name});
+  USERS=m;UID2NAME=u2n;
+  const mine=m[u2n[currentUser.uid]];
+  if(mine){currentUser.name=mine.name;currentUser.role=mine.role}
+  if(!m[currentViewUser])currentViewUser=currentUser.name;
+  softRefresh();
+ },dbErr));
+ unsubs.push(onSnapshot(collection(db,'factions'),snap=>{
+  const f={};
+  snap.forEach(s=>{f[s.id]={...s.data(),key:s.id}});
+  FACTIONS={...clone(DEFAULT_FACTIONS),...f};
+  if(!FACTIONS[currentFactionTab])currentFactionTab=Object.keys(FACTIONS)[0];
+  if(currentUser&&currentUser.role==='Владелец'&&!seeded){seeded=true;seedFactions(new Set(snap.docs.map(d=>d.id)))}
+  softRefresh();
+ },dbErr));
+}
+function stopListeners(){unsubs.forEach(f=>{try{f()}catch(_){}});unsubs=[];timers.forEach(clearInterval);timers=[]}
+
+/* Владелец при первом входе создаёт встроенные фракции в базе и случайные пароли для них */
+async function seedFactions(existing){
+ try{
+  for(const k of Object.keys(DEFAULT_FACTIONS)){
+   if(!existing.has(k))await setDoc(doc(db,'factions',k),clone(DEFAULT_FACTIONS[k]));
+   const sp=await getDoc(doc(db,'factionSecrets',k));
+   if(!sp.exists())await setDoc(doc(db,'factionSecrets',k),{password:randPass()});
+  }
+ }catch(e){console.warn('seedFactions',e)}
+}
+
+/* ===== ПРИСУТСТВИЕ (кто онлайн) ===== */
+async function beat(){
+ if(!currentUser)return;
+ const u=USERS[currentUser.name];
+ try{await setDoc(doc(db,'presence',currentUser.uid),{name:currentUser.name,show:!(u&&u.settings&&u.settings.showOnline===false),ts:serverTimestamp()})}catch(_){}
+}
+async function pollPresence(){
+ if(!currentUser)return;
+ try{
+  const s=await getDocs(query(collection(db,'presence'),where('ts','>',Timestamp.fromMillis(Date.now()-5*60*1000))));
+  const p={};
+  s.forEach(x=>{const d=x.data();p[x.id]={show:d.show!==false,ts:d.ts?d.ts.toMillis():Date.now()}});
+  PRESENCE=p;renderCounters();
+  if(currentView==='profile')renderMenu();
+ }catch(_){}
+}
+const isOnline=uid=>{if(currentUser&&uid===currentUser.uid)return true;const p=PRESENCE[uid];return !!(p&&p.show&&Date.now()-p.ts<6*60*1000)};
+function onlineCount(){
+ let n=0;
+ for(const [uid,p] of Object.entries(PRESENCE)){if(Date.now()-p.ts<6*60*1000&&(p.show||(currentUser&&uid===currentUser.uid)))n++}
+ if(currentUser&&!PRESENCE[currentUser.uid])n++;
+ return n;
+}
+const newToday=()=>{const t=Date.now();return Object.values(USERS).filter(u=>u.createdAt&&u.createdAt.toMillis&&t-u.createdAt.toMillis()<864e5).length};
+function renderCounters(){
+ if(!currentUser)return;
+ $('onlineCount').textContent=onlineCount();$('newCount').textContent=newToday();
+ const g=$('globalChatOnline');if(g)g.textContent=onlineCount();
+}
+
+function resetLocal(){
+ stopListeners();stopChat();
+ currentUser=null;currentViewUser=null;USERS={};UID2NAME={};BANNERS={};PRESENCE={};FACTION_PASS={};
+ FACTIONS=clone(DEFAULT_FACTIONS);seeded=false;sessionUid=null;
+ $('loginForm').reset();$('registerForm').reset();
+ ['fName','fAge','fPass','lName','lPass'].forEach(id=>setInvalid(id,false));
+ hideAllViews();closeModal();closeIssueModal();closeDropdown();
+}
+
+
+/* ===== МЕНЮ ===== */
+function enterMenu(){
+ currentViewUser=currentUser.name;
+ showProfileView();renderMenu();closeDropdown();showScreen('menu');
+}
+/* Мягкое обновление экрана, когда прилетают новые данные из базы */
+function softRefresh(){
+ if(!currentUser||!getUser(currentViewUser))return;
+ renderMenu();
+ const a=document.activeElement,typing=!!a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName);
+ if(currentView==='users'&&!(typing&&a.id==='userSearch'))renderUsersList($('userSearch').value);
+ if(currentView==='factions'&&!(typing&&$('factionContent').contains(a)))renderFactionsView();
+}
+const BANNER_LOADING={};
+async function loadBanner(u){
+ if(u.uid in BANNERS)return safeImg(BANNERS[u.uid]);
+ if(!BANNER_LOADING[u.uid]){
+  BANNER_LOADING[u.uid]=getDoc(doc(db,'banners',u.uid))
+   .then(s=>{BANNERS[u.uid]=s.exists()?(s.data().img||null):null})
+   .catch(()=>{BANNERS[u.uid]=null})
+   .finally(()=>{delete BANNER_LOADING[u.uid]});
+ }
+ await BANNER_LOADING[u.uid];
+ return safeImg(BANNERS[u.uid]);
+}
+function applyBanner(u){
+ const el=$('profileBanner');
+ if(u.uid in BANNERS){const b=safeImg(BANNERS[u.uid]);el.style.backgroundImage=b?`url('${b}')`:'';return}
+ el.style.backgroundImage='';
+ loadBanner(u).then(()=>{if(currentViewUser===u.name)applyBanner(u)});
+}
+function renderMenu(){
+ const user=getUser(currentViewUser);if(!user)return;
+ const isOwner=currentUser.role==='Владелец',my=getUser(currentUser.name);
+ renderCounters();
+ $('profileName').textContent=currentViewUser;
+ const roleEl=$('profileRole');roleEl.textContent=user.role;roleEl.classList.toggle('owner',user.role==='Владелец');
+ const fe=$('profileFaction'),uf=user.faction&&FACTIONS[user.faction];
+ if(uf){const rn=getCurrentRankName(user);fe.style.display='inline-block';fe.textContent=`${uf.icon} ${uf.name}${rn?' · '+rn:''}`}
+ else fe.style.display='none';
+ const av=$('profileAvatar'),ua=safeImg(user.avatar);
+ if(ua)av.innerHTML=`<img src="${ua}" alt="">`;else av.textContent=initials(currentViewUser);
+ applyBanner(user);
+ let m='';
+ if(user.age&&user.settings?.showAge!==false)m+=`<span>🎂 <b>${user.age}</b> лет</span>`;
+ if(user.settings?.showOnline!==false)m+=`<span>${isOnline(user.uid)?'🟢 <b>Онлайн</b>':'⚫ <b>Не в сети</b>'}</span>`;
+ m+=`<span>📄 Документов: <b>${countIssuedDocs(user)}/${DOC_TYPES.length}</b></span>`;
+ if(uf&&user.factionRank){const r=getRankInfo(user.faction,user.factionRank);m+=`<span>⭐ <b>${esc(r.name)}</b></span>`;if(r.xpToNext)m+=`<span>📈 XP: <b>${user.factionXp}</b>/${r.xpToNext}</span>`}
+ $('profileMeta').innerHTML=m;
+ $('ddName').textContent=currentUser.name;$('ddRole').textContent=my.role;
+ const dd=$('ddAvatar'),ma=safeImg(my.avatar);if(ma)dd.innerHTML=`<img src="${ma}" alt="">`;else dd.textContent=initials(currentUser.name);
+ $('openUsers').style.display=isOwner?'flex':'none';
+ $('radioBadge').style.display=(my.faction&&my.factionRank>=7)?'inline-block':'none';
+ renderDocs(user);
+}
+
+function renderDocs(user){
+ const grid=$('docsGrid');grid.innerHTML='';
+ DOC_TYPES.forEach(dt=>{
+  const doc=user.docs[dt.key]||emptyDoc(),issued=doc.issued;
+  let extra;
+  if(dt.isLicenses){const a=doc.data.licenses||[];extra=`<div class="licenses-list">${LICENSE_CATS.map(c=>`<span class="lic-chip ${a.includes(c)?'has':''}">${c}</span>`).join('')}</div>`}
+  else extra=`<div class="doc-sub">${dt.sub}</div>`+(issued&&doc.data.country?`<div class="doc-geo">${flagOf(doc.data.country)}${esc(doc.data.country)}${doc.data.city?', '+esc(doc.data.city):''}</div>`:'');
+  const el=document.createElement('div');
+  el.className='doc t-'+dt.key;
+  el.innerHTML=`<div class="doc-icon">${dt.icon}</div><div class="doc-title">${dt.title}</div><div class="doc-badge ${issued?'badge-ok':'badge-no'}"><span class="dot"></span>${issued?'Есть':'Нету'}</div>${extra}`;
+  el.addEventListener('click',()=>openDoc(dt.key));
+  grid.appendChild(el);
+ });
+}
+
+/* ===== НАВИГАЦИЯ ===== */
+let chatUnsub=null;
+function stopChat(){if(chatUnsub){try{chatUnsub()}catch(_){}chatUnsub=null}}
+function hideAllViews(){stopChat();['profileView','usersView','factionsView','globalChatView','factionChatView','radioView'].forEach(id=>$(id).style.display='none')}
+function showProfileView(){hideAllViews();currentView='profile';$('profileView').style.display=''}
+function showUsersView(){hideAllViews();currentView='users';$('usersView').style.display='';renderUsersList()}
+function showFactionsView(){hideAllViews();currentView='factions';$('factionsView').style.display='';renderFactionsView()}
+function showGlobalChat(){
+ hideAllViews();currentView='chat';$('globalChatView').style.display='';
+ $('globalChatOnline').textContent=onlineCount();
+ watchChat('global',null,'globalChatMessages','💬','Сообщений пока нет. Будь первым!');
+}
+function showFactionChat(){
+ const u=getUser(currentUser.name),f=u.faction&&FACTIONS[u.faction];
+ if(!f){showToast('Вы не во фракции','err');return}
+ hideAllViews();currentView='chat';$('factionChatView').style.display='';
+ $('factionChatTitle').textContent=`📻 Чат: ${f.icon} ${f.name}`;
+ $('factionChatOnline').textContent=membersOf(u.faction).length;
+ watchChat('faction',u.faction,'factionChatMessages','📻','Во фракции пока тихо...');
+}
+function showRadio(){
+ const u=getUser(currentUser.name),f=u.faction&&FACTIONS[u.faction];
+ if(!f){showToast('Рация доступна только участникам фракций','err');return}
+ if(u.factionRank<7){showToast('Рация доступна только с 7 ранга','err');return}
+ hideAllViews();currentView='chat';$('radioView').style.display='';
+ $('radioTitle').textContent=`📡 Рация: ${f.icon} ${f.name}`;
+ watchChat('radio',u.faction,'radioMessages','📡','Эфир чист. Начни передачу!');
+}
+const goProfile=()=>{currentViewUser=currentUser.name;showProfileView();renderMenu()};
+$('openUsers').addEventListener('click',()=>{closeDropdown();showUsersView()});
+$('openFactions').addEventListener('click',()=>{closeDropdown();showFactionsView()});
+$('openGlobalChat').addEventListener('click',()=>{closeDropdown();showGlobalChat()});
+$('openFactionChat').addEventListener('click',()=>{closeDropdown();showFactionChat()});
+$('openRadio').addEventListener('click',()=>{closeDropdown();showRadio()});
+['backFromUsers','backFromFactions','backFromGlobalChat','backFromFactionChat','backFromRadio'].forEach(id=>$(id).addEventListener('click',goProfile));
+const membersOf=k=>Object.values(USERS).filter(u=>u.faction===k).map(u=>[u.name,{rank:u.factionRank,xp:u.factionXp}]);
+
+/* ===== ПОЛЬЗОВАТЕЛИ ===== */
+/* ===== ПОЛЬЗОВАТЕЛИ ===== */
+function renderUsersList(query=''){
+ const list=$('userList');list.innerHTML='';
+ const q=query.trim().toLowerCase(),names=Object.keys(USERS).filter(n=>!q||n.toLowerCase().includes(q));
+ if(!names.length){list.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.4);padding:30px;font-size:14px">Никого не найдено</div>';return}
+ names.forEach(name=>{
+  const u=USERS[name];ensureDocs(u);
+  const row=document.createElement('div');row.className='user-row';
+  const ft=u.faction?`<span class="user-role-tag">${FACTIONS[u.faction].icon} ${FACTIONS[u.faction].name}</span>`:'';
+  row.innerHTML=`<div class="user-avatar">${safeImg(u.avatar)?`<img src="${safeImg(u.avatar)}" alt="">`:initials(name)}</div>
+   <div class="user-info"><div class="user-name">${esc(name)}${name===currentUser.name?' (вы)':''}${u.role==='Владелец'?'<span class="user-role-tag owner">Владелец</span>':''}${ft}</div>
+   <div class="user-sub">${u.age?u.age+' лет · ':''}${u.role}</div></div>
+   <div class="user-docs-count">${countIssuedDocs(u)}/${DOC_TYPES.length}</div>`;
+  row.addEventListener('click',()=>{currentViewUser=name;renderMenu();showProfileView();window.scrollTo({top:0,behavior:'smooth'});showToast(`Открыт профиль: ${name}`)});
+  list.appendChild(row);
+ });
+}
+$('userSearch').addEventListener('input',e=>renderUsersList(e.target.value));
+
+/* ===== ФРАКЦИИ ===== */
+function renderFactionsView(){
+ $('createFactionWrap').style.display=currentUser.role==='Владелец'?'block':'none';
+ const tabs=$('factionTabs');tabs.innerHTML='';
+ Object.keys(FACTIONS).forEach(key=>{
+  const f=FACTIONS[key],t=document.createElement('button');
+  t.className='faction-tab'+(f.type==='ОПГ'?' opolchenie':'')+(key===currentFactionTab?' active':'');
+  t.textContent=`${f.icon} ${f.name}`;
+  t.addEventListener('click',()=>{currentFactionTab=key;renderFactionsView()});
+  tabs.appendChild(t);
+ });
+ renderFactionCard(currentFactionTab);
+}
+function renderFactionCard(key){
+ const f=FACTIONS[key];if(!f)return;
+ const my=getUser(currentUser.name),isOwner=currentUser.role==='Владелец',isMember=my.faction===key;
+ const entries=membersOf(key);
+ let h=`<div class="faction-card"><div class="faction-card-head"><div class="faction-icon">${f.icon}</div>
+  <div style="flex:1"><div class="faction-name">${esc(f.name)}</div><div class="faction-type ${f.type==='ОПГ'?'owner':''}">${f.type} · ${esc(f.description)}</div></div></div>
+  <div class="faction-stats-row">
+   <div class="faction-stat"><div class="faction-stat-label">Всего игроков</div><div class="faction-stat-value">${entries.length}</div></div>
+   <div class="faction-stat"><div class="faction-stat-label">Ваш ранг</div><div class="faction-stat-value">${isMember?esc(getCurrentRankName(my)||'—'):'Не в фракции'}</div></div>
+   <div class="faction-stat"><div class="faction-stat-label">Макс. ранг</div><div class="faction-stat-value">${esc(f.ranks[f.ranks.length-1].name)}</div></div></div>`;
+ if(!isMember&&!isOwner)h+=`<div style="margin-top:14px"><div class="faction-stat-label" style="margin-bottom:8px">🔑 Пароль для вступления</div><div class="password-input-row"><input type="password" id="factionPassInput" placeholder="Введите пароль фракции..."><button class="btn btn-sm" id="joinFactionBtn">Вступить</button></div></div>`;
+ if(isOwner){
+  h+=`<div style="margin-top:14px"><div class="faction-stat-label" style="margin-bottom:8px">🔑 Пароль фракции</div><div class="password-input-row"><input type="text" id="ownerFactionPass" value="${esc(FACTION_PASS[key]||'')}" placeholder="Загрузка..."><button class="btn btn-sm" id="saveFactionPassBtn">Сохранить</button></div></div>`;
+  if(f.custom)h+=`<button class="btn btn-danger btn-sm" id="deleteFactionBtn" style="margin-top:10px;width:100%">🗑️ Удалить фракцию</button>`;
+ }
+ if(isMember&&my.factionRank>0){
+  const rank=getRankInfo(key,my.factionRank),next=f.ranks.find(r=>r.level===my.factionRank+1),x=rank.xpToNext;
+  const pct=x?Math.min(100,Math.round(my.factionXp/x*100)):100;
+  h+=`<div style="margin-top:18px"><div class="faction-stat-label" style="margin-bottom:6px">📈 Опыт до повышения</div>
+   <div class="xp-bar-wrap"><div class="xp-bar-fill" style="width:${pct}%"></div><div class="xp-bar-text">${my.factionXp} / ${x||'—'} XP</div></div>
+   ${next?`<div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:6px">Следующее звание: <b style="color:#67e8f9">${esc(next.name)}</b></div>`:'<div style="font-size:12px;color:#f9a8d4;margin-top:6px;font-weight:700">⭐ Максимальный ранг достигнут</div>'}</div>
+   <div style="margin-top:18px"><div class="faction-stat-label" style="margin-bottom:10px">📋 Задания на повышение</div>
+   ${f.quests.map(q=>{const d=my.questProgress[q.id];return `<div class="quest ${d?'done':''}"><div class="quest-check ${d?'done':''}" data-quest="${q.id}">${d?'✓':''}</div><div class="quest-info"><div class="quest-title">${esc(q.title)}</div><div class="quest-xp">+${q.xp} XP</div></div></div>`}).join('')}</div>`;
+ }
+ if(entries.length){
+  h+=`<div style="margin-top:18px"><div class="faction-stat-label" style="margin-bottom:10px">👥 Участники</div><div class="members-list">`;
+  entries.forEach(([name,d])=>{
+   const r=getRankInfo(key,d.rank);
+   h+=`<div class="member-row"><div class="member-name">${esc(name)}</div><div class="member-rank ${d.rank>=7?'owner':''}">${esc(r.name)}</div>
+   ${isOwner?`<div class="member-actions"><button class="btn btn-sm" data-promote="${esc(name)}" style="padding:6px 12px;font-size:11px">⬆</button><button class="btn btn-sm btn-danger" data-demote="${esc(name)}" style="padding:6px 12px;font-size:11px">⬇</button><button class="btn btn-sm btn-ghost" data-kick="${esc(name)}" style="padding:6px 12px;font-size:11px">✕</button></div>`:''}</div>`;
+  });
+  h+=`</div></div>`;
+ }else h+=`<div style="margin-top:16px;font-size:13px;color:rgba(255,255,255,.4);text-align:center;padding:14px">Пока никого нет во фракции. Владелец может назначить первого участника.</div>`;
+ if(isOwner){
+  const av=Object.keys(USERS).filter(n=>!USERS[n].faction||USERS[n].faction===key);
+  if(av.length)h+=`<div style="margin-top:18px;border-top:1px dashed rgba(255,255,255,.1);padding-top:18px"><div class="faction-stat-label" style="margin-bottom:8px">👑 Назначить в фракцию (1 ранг)</div><div class="password-input-row"><select id="assignUserSelect">${av.map(n=>`<option value="${esc(n)}">${esc(n)}${n===currentUser.name?' (вы)':''}</option>`).join('')}</select><button class="btn btn-sm" id="assignBtn">Назначить</button></div></div>`;
+ }
+ h+='</div>';
+ $('factionContent').innerHTML=h;
+
+ /* пароль фракции хранится отдельно и виден только владельцу */
+ if(isOwner&&!(key in FACTION_PASS)){
+  getDoc(doc(db,'factionSecrets',key)).then(s=>{
+   FACTION_PASS[key]=s.exists()?(s.data().password||''):'';
+   const i=$('ownerFactionPass');if(i&&currentFactionTab===key){i.value=FACTION_PASS[key];i.placeholder=FACTION_PASS[key]?'':'Пароль не задан'}
+  }).catch(()=>{const i=$('ownerFactionPass');if(i)i.placeholder='Не удалось загрузить'});
+ }
+
+ const jb=$('joinFactionBtn');
+ if(jb)jb.addEventListener('click',async()=>{
+  const pass=$('factionPassInput').value;
+  if(!pass){showToast('Введите пароль','err');return}
+  jb.disabled=true;
+  try{await setDoc(doc(db,'joinRequests',currentUser.uid),{faction:key,pass,ts:serverTimestamp()})}
+  catch(e){jb.disabled=false;showToast('Неверный пароль (или владелец ещё не настроил фракцию)','err');return}
+  const ok=await userUpdate(my,{faction:key,factionRank:1,factionXp:0,questProgress:{}});
+  try{await deleteDoc(doc(db,'joinRequests',currentUser.uid))}catch(_){}
+  jb.disabled=false;
+  if(ok){renderMenu();renderFactionsView();showToast(`Вы вступили в ${f.name}`,'ok')}
+ });
+ const sp=$('saveFactionPassBtn');
+ if(sp)sp.addEventListener('click',async()=>{
+  const p=$('ownerFactionPass').value.trim();
+  if(!p){showToast('Пароль не может быть пустым','err');return}
+  try{await setDoc(doc(db,'factionSecrets',key),{password:p});FACTION_PASS[key]=p;showToast('Пароль обновлён','ok')}
+  catch(e){dbErr(e)}
+ });
+ const df=$('deleteFactionBtn');
+ if(df)df.addEventListener('click',async()=>{
+  if(!confirm(`Удалить фракцию "${f.name}"? Все участники будут исключены.`))return;
+  df.disabled=true;
+  try{
+   for(const [n] of membersOf(key)){if(USERS[n])await updateDoc(doc(db,'users',USERS[n].uid),{faction:null,factionRank:0,factionXp:0,questProgress:{}})}
+   await deleteDoc(doc(db,'factions',key));
+   await deleteDoc(doc(db,'factionSecrets',key));
+   await wipeMessages('factionChats',key);await wipeMessages('radioChats',key);
+   delete FACTION_PASS[key];
+   currentFactionTab=Object.keys(FACTIONS).find(k=>k!==key)||'gibdd';
+   renderMenu();renderFactionsView();showToast('Фракция удалена','ok');
+  }catch(e){df.disabled=false;dbErr(e)}
+ });
+ const ab=$('assignBtn');
+ if(ab)ab.addEventListener('click',async()=>{
+  const tn=$('assignUserSelect').value,t=USERS[tn];if(!t)return;
+  if(await userUpdate(t,{faction:key,factionRank:1,factionXp:0,questProgress:{}})){renderMenu();renderFactionsView();showToast(`${tn} назначен в ${f.name}`,'ok')}
+ });
+ document.querySelectorAll('.quest-check[data-quest]').forEach(ch=>ch.addEventListener('click',async()=>{
+  if(!isMember)return;
+  const qid=ch.dataset.quest,q=f.quests.find(x=>x.id===qid);if(!q)return;
+  const prog={...my.questProgress};let xp=my.factionXp,rank=my.factionRank,promoted=false;
+  if(prog[qid]){prog[qid]=false;xp=Math.max(0,xp-q.xp)}else{prog[qid]=true;xp+=q.xp}
+  const r=getRankInfo(key,rank);
+  if(r&&r.xpToNext&&xp>=r.xpToNext&&rank<f.ranks.length){rank++;promoted=true}
+  if(await userUpdate(my,{questProgress:prog,factionXp:xp,factionRank:rank})){
+   if(promoted)showToast(`⭐ Повышение! ${getRankInfo(key,rank).name}`,'ok');
+   renderMenu();renderFactionsView();
+  }
+ }));
+ document.querySelectorAll('[data-promote]').forEach(b=>b.addEventListener('click',async()=>{
+  const n=b.dataset.promote,t=USERS[n];if(!t||!t.faction||!FACTIONS[t.faction])return;const tf=FACTIONS[t.faction];
+  if(t.factionRank<tf.ranks.length){
+   const nr=t.factionRank+1;
+   if(await userUpdate(t,{factionRank:nr})){renderMenu();renderFactionsView();showToast(`${n} → ${getRankInfo(t.faction,nr).name}`,'ok')}
+  }else showToast('Максимальный ранг','err');
+ }));
+ document.querySelectorAll('[data-demote]').forEach(b=>b.addEventListener('click',async()=>{
+  const n=b.dataset.demote,t=USERS[n];if(!t||!t.faction)return;
+  if(t.factionRank>1){
+   const nr=t.factionRank-1;
+   if(await userUpdate(t,{factionRank:nr})){renderMenu();renderFactionsView();showToast(`${n} → ${getRankInfo(t.faction,nr).name}`,'ok')}
+  }else showToast('Ниже 1 ранга нельзя','err');
+ }));
+ document.querySelectorAll('[data-kick]').forEach(b=>b.addEventListener('click',async()=>{
+  const n=b.dataset.kick,t=USERS[n];if(!t||!t.faction)return;
+  if(await userUpdate(t,{faction:null,factionRank:0,factionXp:0,questProgress:{}})){renderMenu();renderFactionsView();showToast(`${n} исключён`,'ok')}
+ }));
+}
+async function wipeMessages(col,fk){
+ const s=await getDocs(query(collection(db,col,fk,'messages'),limit(400)));
+ if(s.empty)return;
+ const b=writeBatch(db);s.forEach(d=>b.delete(d.ref));await b.commit();
+}
+
+/* ===== СОЗДАНИЕ ФРАКЦИИ ===== */
+$('createFactionBtn').addEventListener('click',openCreateFactionModal);
+function openCreateFactionModal(){
+ openModal(`<button class="modal-close" data-close>✕</button><h3>➕ Создать фракцию / ОПГ</h3><p class="modal-sub">Заполните данные новой структуры</p>
+ <div class="issue-form">
+  <div class="issue-row"><div class="issue-field"><label>Название</label><input type="text" id="cfName" placeholder="Например, ФСБ"></div><div class="issue-field"><label>Иконка (эмодзи)</label><input type="text" id="cfIcon" placeholder="🕵️" maxlength="4"></div></div>
+  <div class="issue-row"><div class="issue-field"><label>Тип</label><select id="cfType"><option value="Государственная">Государственная</option><option value="ОПГ">ОПГ</option></select></div><div class="issue-field"><label>Пароль вступления</label><input type="text" id="cfPass" placeholder="secret123"></div></div>
+  <div class="issue-field"><label>Описание</label><input type="text" id="cfDesc" placeholder="Краткое описание"></div>
+  <div class="issue-field"><label>Ранги (через запятую, от низшего к высшему)</label><input type="text" id="cfRanks" placeholder="Рядовой, Сержант, Лейтенант, Полковник"></div>
+  <div class="issue-row"><div class="issue-field"><label>Может забирать права?</label><select id="cfTakeLicense"><option value="0">Нет</option><option value="1">Да</option></select></div><div class="issue-field"><label>Может выдавать документы?</label><select id="cfIssueDocs"><option value="0">Нет</option><option value="1">Да</option></select></div></div>
+  <div class="btn-row" style="margin-top:8px"><button class="btn" id="cfSave" style="flex:1">Создать</button><button class="btn btn-ghost" data-close style="flex:0 0 auto">Отмена</button></div>
+ </div>`);
+ $('cfSave').addEventListener('click',async()=>{
+  const name=$('cfName').value.trim(),icon=$('cfIcon').value.trim()||'🏛️',type=$('cfType').value,pass=$('cfPass').value.trim();
+  const desc=$('cfDesc').value.trim()||'Без описания',raw=$('cfRanks').value.trim();
+  if(!name||!pass||!raw){showToast('Заполните название, пароль и ранги','err');return}
+  const rn=raw.split(',').map(s=>s.trim()).filter(Boolean);
+  if(rn.length<2){showToast('Нужно минимум 2 ранга','err');return}
+  let key=name.toLowerCase().replace(/[^a-zа-я0-9]/gi,'').slice(0,10)||'fac',base=key,i=1;
+  while(FACTIONS[key])key=base+i++;
+  const def={key,name,icon,type,canTakeLicense:$('cfTakeLicense').value==='1',canIssueDocs:$('cfIssueDocs').value==='1',
+   ranks:rn.map((n,idx)=>({level:idx+1,name:n,xpToNext:idx===rn.length-1?null:100+idx*200})),description:desc,custom:true,
+   quests:[{id:'q1',title:'Выполнить задание 1',xp:50},{id:'q2',title:'Выполнить задание 2',xp:100},{id:'q3',title:'Выполнить задание 3',xp:150}]};
+  $('cfSave').disabled=true;
+  try{
+   await setDoc(doc(db,'factions',key),def);
+   await setDoc(doc(db,'factionSecrets',key),{password:pass});
+   FACTION_PASS[key]=pass;
+   closeModal();currentFactionTab=key;renderFactionsView();showToast(`Фракция «${name}» создана`,'ok');
+  }catch(e){$('cfSave').disabled=false;dbErr(e)}
+ });
+}
+
+/* ===== ЧАТЫ (реальное время) ===== */
+const fmtTime=ts=>{const d=ts&&ts.toDate?ts.toDate():new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0')};
+function chatCol(kind,fk){
+ if(kind==='global')return collection(db,'globalChat');
+ return collection(db,kind==='faction'?'factionChats':'radioChats',fk,'messages');
+}
+function renderMessage(m,mine){
+ let tag='';
+ if(m.faction&&m.rank){const f=FACTIONS[m.faction],r=getRankInfo(m.faction,m.rank);if(f&&r)tag=`<span class="chat-rank-tag ${m.role==='Владелец'?'owner':''}">${f.icon} ${esc(r.name)}</span>`}
+ else if(m.role==='Владелец')tag='<span class="chat-rank-tag owner">👑 Владелец</span>';
+ const av=safeImg((USERS[m.author]||{}).avatar);
+ return `<div class="chat-msg ${mine?'my':''}"><div class="chat-avatar">${av?`<img src="${av}" alt="">`:initials(m.author)}</div>
+ <div class="chat-bubble-wrap"><div class="chat-author">${esc(m.author)} ${tag}</div><div class="chat-bubble">${esc(m.text)}</div><div class="chat-time">${fmtTime(m.ts)}</div></div></div>`;
+}
+function drawChat(boxId,msgs,icon,emptyText){
+ const box=$(boxId);
+ if(!msgs.length){box.innerHTML=`<div class="chat-empty"><div class="chat-empty-icon">${icon}</div><div>${emptyText}</div></div>`;return}
+ box.innerHTML=msgs.map(m=>renderMessage(m,m.author===currentUser.name)).join('');box.scrollTop=box.scrollHeight;
+}
+function watchChat(kind,fk,boxId,icon,emptyText){
+ stopChat();
+ chatUnsub=onSnapshot(query(chatCol(kind,fk),orderBy('ts','desc'),limit(100)),snap=>{
+  const msgs=snap.docs.map(s=>s.data({serverTimestamps:'estimate'})).reverse();
+  drawChat(boxId,msgs,icon,emptyText);
+ },dbErr);
+}
+async function sendMsg(kind,fk,inp){
+ const text=inp.value.trim().slice(0,300);if(!text)return;
+ const u=getUser(currentUser.name);
+ inp.value='';
+ try{
+  await addDoc(chatCol(kind,fk),{uid:currentUser.uid,author:u.name,role:u.role,faction:u.faction??null,rank:u.factionRank||0,text,ts:serverTimestamp()});
+ }catch(e){inp.value=text;console.error(e);showToast('Не удалось отправить сообщение','err')}
+}
+[['globalChatSend','globalChatInput',()=>sendMsg('global',null,$('globalChatInput'))],
+ ['factionChatSend','factionChatInput',()=>{const u=getUser(currentUser.name);if(u.faction)sendMsg('faction',u.faction,$('factionChatInput'))}],
+ ['radioSend','radioInput',()=>{const u=getUser(currentUser.name);if(u.faction&&u.factionRank>=7)sendMsg('radio',u.faction,$('radioInput'))}]
+].forEach(([b,i,fn])=>{$(b).addEventListener('click',fn);$(i).addEventListener('keydown',e=>{if(e.key==='Enter')fn()})});
+
+/* ===== ДОКУМЕНТЫ ===== */
+/* ===== ДОКУМЕНТЫ ===== */
+function getFieldList(key){
+ const C=(k,l)=>({key:k,label:l,type:'country'}),T=(k,l,of)=>({key:k,label:l,type:'city',of}),D=(k,l)=>({key:k,label:l,type:'date'});
+ switch(key){
+  case 'passport':return [
+   {key:'series',label:'Серия'},{key:'number',label:'Номер'},
+   {key:'sex',label:'Пол',type:'select',options:['Мужской','Женский']},D('birthDate','Дата рождения'),
+   C('birthCountry','Страна рождения'),T('birthCity','Город рождения','birthCountry'),
+   C('country','Гражданство / страна выдачи'),T('city','Город выдачи','country'),
+   {key:'issuedBy',label:'Кем выдан',wide:true},D('issuedDate','Дата выдачи'),
+   {key:'address',label:'Адрес проживания',wide:true}];
+  case 'medcard':return [
+   {key:'number',label:'Номер карты'},{key:'bloodType',label:'Группа крови',type:'select',options:['I (0) +','I (0) −','II (A) +','II (A) −','III (B) +','III (B) −','IV (AB) +','IV (AB) −']},
+   C('country','Страна клиники'),T('city','Город клиники','country'),
+   {key:'doctor',label:'Лечащий врач'},D('lastExam','Последний осмотр'),
+   {key:'notes',label:'Примечания',wide:true}];
+  case 'voenik':return [
+   {key:'series',label:'Серия'},{key:'number',label:'Номер'},
+   {key:'rank',label:'Воинское звание'},{key:'category',label:'Категория годности',type:'select',options:['А — годен','Б — годен с ограничениями','В — ограниченно годен','Г — временно не годен','Д — не годен']},
+   C('country','Страна'),T('city','Город военкомата','country'),
+   {key:'commissar',label:'Военком',wide:true},D('issuedDate','Дата выдачи'),
+   {key:'service',label:'Место службы',wide:true}];
+  case 'povestka':return [
+   {key:'number',label:'Номер повестки'},D('date','Дата явки'),
+   C('country','Страна'),T('city','Город','country'),
+   {key:'commissariat',label:'Военкомат',wide:true},{key:'reason',label:'Причина',wide:true}];
+  case 'otsrochka':return [
+   {key:'number',label:'Номер документа'},D('until','Действует до'),
+   C('country','Страна'),T('city','Город','country'),
+   {key:'reason',label:'Причина отсрочки',wide:true},{key:'issuedBy',label:'Кем выдан',wide:true}];
+  default:return [{key:'text',label:'Содержание',wide:true}];
+ }
+}
+function openDoc(key){
+ const dt=DOC_TYPES.find(d=>d.key===key),user=getUser(currentViewUser),doc=user.docs[key];
+ const isOwner=currentUser.role==='Владелец',isOwn=currentUser.name===currentViewUser;
+ const my=getUser(currentUser.name),mf=my.faction?FACTIONS[my.faction]:null;
+ const canTake=mf&&mf.canTakeLicense,canIssue=mf&&mf.canIssueDocs;
+ if(!doc.issued){
+  let h=`<button class="modal-close" data-close>✕</button><h3>${dt.icon} ${dt.title}</h3><p class="modal-sub">Игрок: ${esc(currentViewUser)}</p>
+  <div class="doc-view t-${key}"><div class="doc-view-head"><div class="doc-view-icon">${dt.icon}</div><div><div class="doc-view-title">${dt.title}</div><div class="doc-view-status no">Не выдан</div></div></div>
+  <p style="color:rgba(255,255,255,.4);font-size:13px">У этого игрока пока нет данного документа.</p></div>`;
+  h+=(isOwner||canIssue)?`<button class="btn" id="btnIssue">Выдать документ</button><button class="btn btn-ghost" data-close style="margin-top:10px">Закрыть</button>`:`<button class="btn btn-ghost" data-close>Закрыть</button>`;
+  openModal(h);
+  const ib=$('btnIssue');if(ib)ib.addEventListener('click',()=>{closeModal();openIssueForm(key)});
+  return;
+ }
+ let fh='';
+ if(dt.isLicenses){
+  const a=doc.data.licenses||[];
+  fh=`<div class="doc-field wide"><div class="doc-field-label">Открытые категории</div><div class="doc-field-value ${a.length?'':'empty'}">${a.length?a.join(', '):'Нет'}</div></div>`;
+ }else getFieldList(key).forEach(f=>{
+  const v=doc.data[f.key];
+  fh+=`<div class="doc-field ${f.wide?'wide':''}"><div class="doc-field-label">${f.label}</div><div class="doc-field-value ${v?'':'empty'}">${showVal(f,v)}</div></div>`;
+ });
+ let sh='';
+ if(doc.signature||doc.issuedBy||doc.issuedAt){
+  sh=`<div class="signature-block"><div>
+   <div class="signature-label">Подпись</div><div class="signature-text ${doc.signature?'':'empty'}">${doc.signature?esc(doc.signature):'нет подписи'}</div>
+   <div class="signature-label" style="margin-top:10px">Кем выдан</div><div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.8)">${doc.issuedBy?esc(doc.issuedBy):'—'}</div>
+   <div class="signature-label" style="margin-top:10px">Когда выдан</div><div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.8)">${doc.issuedAt?esc(doc.issuedAt):'—'}</div></div>
+   <div class="stamp">${esc(doc.data.city||'NEXUS')}<br>${esc(doc.issuedBy||'NEXUS')}</div></div>`;
+ }
+ const mrz=key==='passport'?`<div class="mrz">P&lt;${esc((doc.data.country||'NXS').slice(0,3).toUpperCase())}&lt;&lt;${esc(currentViewUser.toUpperCase())}&lt;&lt;${esc((doc.data.series||'')+(doc.data.number||''))}&lt;&lt;&lt;&lt;&lt;&lt;</div>`:'';
+ let act=`<button class="btn btn-ghost" data-close>Закрыть</button>`;
+ if(isOwner||canIssue)act=`<div class="btn-row"><button class="btn btn-sm" id="btnEditDoc" style="flex:1">✏️ Изменить</button><button class="btn btn-sm btn-danger" id="btnRevokeDoc" style="flex:1">🗑️ Отозвать</button></div><button class="btn btn-ghost" data-close style="margin-top:10px">Закрыть</button>`;
+ if(dt.isLicenses&&canTake&&!isOwn)act=`<div class="btn-row"><button class="btn btn-sm btn-danger" id="btnTakeLicense" style="flex:1">🚫 Забрать права</button><button class="btn btn-sm btn-ghost" data-close style="flex:1">Закрыть</button></div>`;
+ openModal(`<button class="modal-close" data-close>✕</button><h3>${dt.icon} ${dt.title}</h3><p class="modal-sub">Данные документа игрока ${esc(currentViewUser)}</p>
+ <div class="doc-view t-${key}"><div class="doc-view-head"><div class="doc-view-icon">${dt.icon}</div><div><div class="doc-view-title">${dt.title}</div><div class="doc-view-status ok">Выдан</div></div></div>
+ <div class="doc-fields">${fh}</div>${mrz}${sh}</div>${act}`);
+ const eb=$('btnEditDoc');if(eb)eb.addEventListener('click',()=>{closeModal();openIssueForm(key,doc)});
+ const rb=$('btnRevokeDoc');
+ if(rb)rb.addEventListener('click',async()=>{if(confirm('Отозвать документ?')){if(await userUpdate(user,{['docs.'+key]:emptyDoc()})){closeModal();renderMenu();showToast('Документ отозван','ok')}}});
+ const tb=$('btnTakeLicense');
+ if(tb)tb.addEventListener('click',async()=>{if(confirm(`Забрать права у ${currentViewUser}?`)){if(await userUpdate(user,{'docs.licenses':emptyDoc()})){closeModal();renderMenu();showToast('Права изъяты','ok')}}});
+}
+
+/* ===== ВЫДАЧА ДОКУМЕНТА ===== */
+/* ===== ВЫДАЧА ДОКУМЕНТА ===== */
+function openIssueForm(key,existing){
+ const dt=DOC_TYPES.find(d=>d.key===key),user=getUser(currentViewUser),doc=existing||emptyDoc(),isEdit=!!existing;
+ let fh='';
+ if(dt.isLicenses){
+  const a=doc.data.licenses||[];
+  fh=`<div class="issue-field"><label>Категории</label><div class="lic-toggle-row" id="licToggles">${LICENSE_CATS.map(c=>`<button type="button" class="lic-toggle ${a.includes(c)?'active':''}" data-cat="${c}">${c}</button>`).join('')}</div></div>`;
+ }else{
+  let buf=[],res='';
+  const flush=()=>{if(!buf.length)return;res+=`<div class="issue-row">${buf.join('')}</div>`;buf=[]};
+  getFieldList(key).forEach(f=>{
+   const v=doc.data[f.key]||'';let c;
+   if(f.type==='country')c=`<select data-field="${f.key}" data-geo="country">${countryOptions(v)}</select>`;
+   else if(f.type==='city')c=`<select data-field="${f.key}" data-of="${f.of}">${cityOptions(doc.data[f.of],v)}</select>`;
+   else if(f.type==='select')c=`<select data-field="${f.key}"><option value="">— выбрать —</option>${f.options.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
+   else if(f.type==='date')c=`<input type="date" data-field="${f.key}" value="${/^\d{4}-/.test(v)?v:''}">`;
+   else c=`<input type="text" data-field="${f.key}" value="${esc(v)}" placeholder="Введите ${f.label.toLowerCase()}">`;
+   const html=`<div class="issue-field"><label>${f.label}</label>${c}</div>`;
+   if(f.wide){flush();res+=html}else{buf.push(html);if(buf.length===2)flush()}
+  });
+  flush();fh=`<div class="issue-form">${res}</div>`;
+ }
+ openIssueModal(`<button class="modal-close" data-issue-close>✕</button><h3>${isEdit?'✏️ Изменить':'📝 Выдать'} — ${dt.title}</h3>
+ <p class="modal-sub">Игрок: <b style="color:#67e8f9">${esc(currentViewUser)}</b></p>
+ <div class="issue-form" id="issueFormEl">${fh}
+  <div class="issue-field"><label>Подпись</label><input type="text" id="issueSignature" value="${esc(doc.signature||'')}" placeholder="Подпись"></div>
+  <div class="issue-field"><label>Кем выдан</label><input type="text" id="issueBy" value="${esc(doc.issuedBy||currentUser.name)}" placeholder="Кем выдан"></div>
+  <div class="issue-field"><label>Дата выдачи</label><input type="text" id="issueDate" value="${esc(doc.issuedAt||new Date().toLocaleDateString('ru-RU'))}" placeholder="ДД.ММ.ГГГГ"></div>
+  <div class="btn-row" style="margin-top:8px"><button class="btn" id="issueSave" style="flex:1">${isEdit?'Сохранить':'Выдать документ'}</button><button class="btn btn-ghost" data-issue-close style="flex:0 0 auto">Отмена</button></div>
+ </div>`);
+ const tg=$('licToggles');
+ if(tg)tg.querySelectorAll('.lic-toggle').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('active')));
+ document.querySelectorAll('#issueFormEl select[data-geo="country"]').forEach(s=>s.addEventListener('change',()=>{
+  const c=document.querySelector(`#issueFormEl select[data-of="${s.dataset.field}"]`);
+  if(c)c.innerHTML=cityOptions(s.value,'');
+ }));
+ $('issueSave').addEventListener('click',async()=>{
+  const data={};
+  if(dt.isLicenses)data.licenses=[...$('licToggles').querySelectorAll('.lic-toggle.active')].map(b=>b.dataset.cat);
+  else document.querySelectorAll('#issueFormEl [data-field]').forEach(i=>{data[i.dataset.field]=i.value.trim()});
+  const signature=$('issueSignature').value.trim(),issuedBy=$('issueBy').value.trim(),issuedAt=$('issueDate').value.trim();
+  if(!signature||!issuedBy){showToast('Заполните подпись и кем выдан','err');return}
+  if(!await userUpdate(user,{['docs.'+key]:{issued:true,data,signature,issuedBy,issuedAt}}))return;
+  closeIssueModal();renderMenu();showToast('Документ сохранён','ok');
+ });
+}
+
+/* ===== МОДАЛКИ ===== */
+function openModal(html){
+ $('modalContent').innerHTML=html;$('modalOverlay').classList.add('open');document.body.style.overflow='hidden';
+ $('modalContent').querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
+}
+function closeModal(){$('modalOverlay').classList.remove('open');if(!$('issueOverlay').classList.contains('open'))document.body.style.overflow=''}
+$('modalOverlay').addEventListener('click',e=>{if(e.target===$('modalOverlay'))closeModal()});
+function openIssueModal(html){
+ $('issueContent').innerHTML=html;$('issueOverlay').classList.add('open');document.body.style.overflow='hidden';
+ $('issueContent').querySelectorAll('[data-issue-close]').forEach(b=>b.addEventListener('click',closeIssueModal));
+}
+function closeIssueModal(){$('issueOverlay').classList.remove('open');if(!$('modalOverlay').classList.contains('open'))document.body.style.overflow=''}
+$('issueOverlay').addEventListener('click',e=>{if(e.target===$('issueOverlay'))closeIssueModal()});
+
+/* ===== НАСТРОЙКИ ===== */
+async function openSettings(){
+ const user=getUser(currentUser.name);ensureDocs(user);
+ const curBanner=await loadBanner(user);
+ settingsDraft={avatar:safeImg(user.avatar),banner:curBanner,bannerOrig:curBanner,settings:{...user.settings}};
+ const S=settingsDraft.settings;
+ openModal(`<button class="modal-close" data-close>✕</button><h3>⚙️ Настройки</h3><p class="modal-sub">Профиль, внешний вид и параметры</p>
+ <div class="settings-tabs"><button class="settings-tab active" data-tab="media">🖼️ Медиа</button><button class="settings-tab" data-tab="profile">👤 Профиль</button><button class="settings-tab" data-tab="privacy">🔒 Приватность</button><button class="settings-tab" data-tab="app">🎛️ Приложение</button></div>
+ <div class="tab-pane active" id="pane-media">
+  <div class="settings-section"><div class="settings-section-title">Аватарка</div><div class="upload-box upload-avatar" id="avatarBox"><input type="file" accept="image/*" id="avatarInput"><div id="avatarPlaceholder"><div class="up-icon">🖼️</div><div class="up-title">Загрузить аватарку</div><div class="up-hint">PNG, JPG</div></div><div class="upload-preview" id="avatarPreview"></div></div></div>
+  <div class="settings-section"><div class="settings-section-title">Баннер профиля</div><div class="upload-box upload-banner" id="bannerBox"><input type="file" accept="image/*" id="bannerInput"><div id="bannerPlaceholder"><div class="up-icon">🌄</div><div class="up-title">Загрузить баннер</div><div class="up-hint">PNG, JPG</div></div><div class="upload-preview" id="bannerPreview"></div></div></div>
+ </div>
+ <div class="tab-pane" id="pane-profile">
+  <div class="settings-section"><div class="settings-section-title">Личные данные</div>
+   <div class="issue-field" style="margin-bottom:12px"><label>Имя (логин)</label><input type="text" value="${esc(currentUser.name)}" disabled style="opacity:.6"></div>
+   <div class="issue-field" style="margin-bottom:12px"><label>Возраст</label><input type="number" id="setAge" min="6" max="99" value="${user.age??''}" placeholder="Например, 18"></div>
+   <div class="issue-field"><label>О себе</label><textarea id="setBio" placeholder="Пара слов о себе...">${esc(user.bio||'')}</textarea></div></div>
+  <div class="settings-section"><div class="settings-section-title">Смена пароля</div>
+   <div class="issue-field" style="margin-bottom:12px"><label>Новый пароль</label><input type="password" id="setNewPass" placeholder="Минимум 6 символов"></div>
+   <div class="issue-field"><label>Повторите пароль</label><input type="password" id="setNewPass2" placeholder="Ещё раз"></div></div>
+ </div>
+ <div class="tab-pane" id="pane-privacy"><div class="settings-section"><div class="settings-section-title">Кто что видит</div>
+  <div class="toggle-row"><div class="toggle-row-info"><div class="toggle-row-label">Показывать онлайн</div><div class="toggle-row-desc">Другие видят, что вы в сети</div></div><div class="switch ${S.showOnline?'on':''}" data-toggle="showOnline"></div></div>
+  <div class="toggle-row"><div class="toggle-row-info"><div class="toggle-row-label">Показывать возраст</div><div class="toggle-row-desc">Возраст отображается в профиле</div></div><div class="switch ${S.showAge?'on':''}" data-toggle="showAge"></div></div></div></div>
+ <div class="tab-pane" id="pane-app">
+  <div class="settings-section"><div class="settings-section-title">Уведомления</div>
+   <div class="toggle-row"><div class="toggle-row-info"><div class="toggle-row-label">Уведомления</div><div class="toggle-row-desc">Показывать важные события</div></div><div class="switch ${S.notifications?'on':''}" data-toggle="notifications"></div></div>
+   <div class="toggle-row"><div class="toggle-row-info"><div class="toggle-row-label">Звуки</div><div class="toggle-row-desc">Звуковые эффекты</div></div><div class="switch ${S.sounds?'on':''}" data-toggle="sounds"></div></div></div>
+  <div class="settings-section"><div class="settings-section-title">Язык интерфейса</div><div class="issue-field"><select id="setLang"><option value="ru" ${S.lang==='ru'?'selected':''}>🇷🇺 Русский</option><option value="en" ${S.lang==='en'?'selected':''}>🇬🇧 English</option></select></div></div>
+ </div>
+ <div class="btn-row" style="margin-top:22px"><button class="btn" id="saveSettings" style="flex:1">Сохранить</button><button class="btn btn-ghost" data-close style="flex:0 0 auto">Отмена</button></div>`);
+ document.querySelectorAll('.settings-tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.settings-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));$('pane-'+t.dataset.tab).classList.add('active');
+ }));
+ document.querySelectorAll('.switch[data-toggle]').forEach(sw=>sw.addEventListener('click',()=>{sw.classList.toggle('on');settingsDraft.settings[sw.dataset.toggle]=sw.classList.contains('on')}));
+ refreshUploadBoxes();
+ const ai=$('avatarInput'),bi=$('bannerInput');
+ $('avatarBox').addEventListener('click',e=>{if(e.target!==ai)ai.click()});
+ $('bannerBox').addEventListener('click',e=>{if(e.target!==bi)bi.click()});
+ ai.addEventListener('change',()=>handleFile(ai,'avatar'));bi.addEventListener('change',()=>handleFile(bi,'banner'));
+ $('saveSettings').addEventListener('click',async()=>{
+  const btn=$('saveSettings'),p1=$('setNewPass').value,p2=$('setNewPass2').value;
+  if(p1||p2){
+   if(p1.length<6){showToast('Пароль короче 6 символов','err');return}
+   if(p1!==p2){showToast('Пароли не совпадают','err');return}
+  }
+  const patch={avatar:settingsDraft.avatar||null,bio:$('setBio').value.trim().slice(0,300),settings:{...settingsDraft.settings,lang:$('setLang').value}};
+  const ageRaw=$('setAge').value,na=parseInt(ageRaw,10);
+  if(!isNaN(na)&&na>=6&&na<=99)patch.age=na;else if(ageRaw==='')patch.age=null;
+  btn.disabled=true;
+  try{
+   await updateDoc(doc(db,'users',user.uid),patch);
+   if((settingsDraft.banner||null)!==(settingsDraft.bannerOrig||null)){
+    await setDoc(doc(db,'banners',user.uid),{img:settingsDraft.banner||null});
+    BANNERS[user.uid]=settingsDraft.banner||null;
+   }
+  }catch(e){btn.disabled=false;dbErr(e);return}
+  let passMsg='';
+  if(p1){try{await updatePassword(auth.currentUser,p1)}catch(e){passMsg=authError(e)}}
+  btn.disabled=false;
+  beat();renderMenu();closeModal();
+  if(passMsg)showToast('Профиль сохранён, пароль не изменён: '+passMsg,'err');else showToast('Настройки сохранены','ok');
+ });
+}
+async function compressImage(file,w,h,q){
+ const url=URL.createObjectURL(file);
+ try{
+  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('bad image'));i.src=url});
+  const k=Math.max(w/img.width,h/img.height),dw=img.width*k,dh=img.height*k;
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');x.fillStyle='#0b0914';x.fillRect(0,0,w,h);
+  x.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh);
+  return c.toDataURL('image/jpeg',q);
+ }finally{URL.revokeObjectURL(url)}
+}
+async function handleFile(input,type){
+ const file=input.files&&input.files[0];if(!file)return;
+ if(file.size>5*1024*1024){showToast('Файл больше 5 МБ','err');return}
+ try{
+  settingsDraft[type]=type==='avatar'?await compressImage(file,192,192,.85):await compressImage(file,1280,360,.75);
+  refreshUploadBoxes();showToast(type==='avatar'?'Аватарка выбрана':'Баннер выбран','ok');
+ }catch(e){showToast('Не удалось прочитать изображение','err')}
+}
+function refreshUploadBoxes(){
+ [['avatar','avatarPreview','avatarPlaceholder'],['banner','bannerPreview','bannerPlaceholder']].forEach(([k,p,ph])=>{
+  const pv=$(p);if(!pv)return;const pl=$(ph);
+  if(settingsDraft[k]){pv.style.backgroundImage=`url('${settingsDraft[k]}')`;pv.classList.add('show');pl.style.opacity='0'}
+  else{pv.classList.remove('show');pv.style.backgroundImage='';pl.style.opacity=''}
+ });
+}
+
+/* ===== БУРГЕР ===== */
+/* ===== БУРГЕР ===== */
+const burger=$('burger'),dropdown=$('dropdown');
+burger.addEventListener('click',e=>{e.stopPropagation();burger.classList.toggle('open');dropdown.classList.toggle('open')});
+document.addEventListener('click',e=>{if(!dropdown.contains(e.target)&&!burger.contains(e.target))closeDropdown()});
+function closeDropdown(){burger.classList.remove('open');dropdown.classList.remove('open')}
+$('openSettings').addEventListener('click',()=>{closeDropdown();openSettings()});
+$('logoutBtn').addEventListener('click',async()=>{
+ closeDropdown();
+ const uid=currentUser&&currentUser.uid;
+ stopListeners();stopChat();
+ try{if(uid)await deleteDoc(doc(db,'presence',uid))}catch(e){}
+ sessionUid=null;
+ try{await signOut(auth)}catch(e){}
+ resetLocal();showScreen('login');showToast('Вы вышли из аккаунта');
+});
+</script>
+<script>setTimeout(function(){var b=document.getElementById("boot");if(b)b.classList.add("hide")},9000)</script>
+</body>
+</html>
